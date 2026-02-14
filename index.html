@@ -714,6 +714,7 @@ let seanceActive = null;
 let currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
 let deferredPrompt;
 let isOnline = navigator.onLine;
+let prochainNumero = 1;
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', function() {
@@ -922,6 +923,9 @@ async function enregistrerChoriste() {
     }
     
     try {
+        // Calculer le prochain numéro d'alignement
+        const prochainNumero = (choristes.length + 1).toString().padStart(3, '0');
+        
         const choriste = {
             nomComplet: nomComplet,
             sexe: sexe,
@@ -929,7 +933,8 @@ async function enregistrerChoriste() {
             communaute: communaute,
             telephone: telephone,
             photo: currentPhotoUrl,
-            dateInscription: new Date().toISOString()
+            dateInscription: new Date().toISOString(),
+            numero: prochainNumero
         };
         
         await db.collection('choristes').add(choriste);
@@ -1253,95 +1258,86 @@ function imprimerListe() {
         return;
     }
 
-    const printContent = document.createElement('div');
-    printContent.innerHTML = `
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                padding: 20px;
-                margin: 0;
-            }
-            .print-title {
-                font-size: 18pt;
-                font-weight: bold;
-                margin-bottom: 20px;
-                text-align: center;
-                color: #2c3e50;
-            }
-            .print-date {
-                font-size: 11pt;
-                margin-bottom: 20px;
-                text-align: right;
-                color: #666;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 12pt;
-            }
-            th {
-                background-color: #2c3e50;
-                color: white;
-                padding: 10px;
-                text-align: left;
-                border: 1px solid #000;
-            }
-            td {
-                padding: 8px;
-                border: 1px solid #000;
-                vertical-align: middle;
-            }
-            img {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                object-fit: cover;
-            }
-            .badge-voix {
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 11pt;
-                display: inline-block;
-            }
-            .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
-            .badge-alto { background-color: #b39ddb; color: #311b92; }
-            .badge-tenor { background-color: #ffe0b2; color: #e65100; }
-            .badge-basse { background-color: #b0bec5; color: #1a237e; }
-            .progress {
-                width: 100%;
-                height: 12px;
-                background-color: #f0f0f0;
-                border: 1px solid #000;
-                margin-top: 5px;
-            }
-            .progress-bar {
-                height: 100%;
-                background: linear-gradient(135deg, #3498db, #27ae60);
-            }
-            .pourcentage-vert { color: #27ae60; font-weight: bold; }
-            .pourcentage-rouge { color: #e74c3c; font-weight: bold; }
-            @media print {
-                body { margin: 0; padding: 15px; }
-            }
-        </style>
-        <div class="print-title">Liste des choristes</div>
-        <div class="print-date">Date d'impression : ${new Date().toLocaleString('fr-FR')}</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>N°</th>
-                    <th>Photo</th>
-                    <th>Nom complet</th>
-                    <th>Voix</th>
-                    <th>Communauté</th>
-                    <th>Téléphone</th>
-                    <th>%</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    
     const totalSeances = seances.length;
+    
+    let tableHTML = `
+        <html>
+        <head>
+            <title>Liste des choristes</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 15px;
+                    margin: 0;
+                }
+                .print-title {
+                    font-size: 16pt;
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                    text-align: center;
+                    color: #2c3e50;
+                }
+                .print-date {
+                    font-size: 10pt;
+                    margin-bottom: 15px;
+                    text-align: right;
+                    color: #666;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 11pt;
+                }
+                th {
+                    background-color: #2c3e50;
+                    color: white;
+                    padding: 8px;
+                    text-align: left;
+                    border: 1px solid #000;
+                }
+                td {
+                    padding: 6px;
+                    border: 1px solid #000;
+                    vertical-align: middle;
+                }
+                img {
+                    width: 35px;
+                    height: 35px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+                .badge-voix {
+                    padding: 3px 6px;
+                    border-radius: 10px;
+                    font-size: 10pt;
+                    display: inline-block;
+                }
+                .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
+                .badge-alto { background-color: #b39ddb; color: #311b92; }
+                .badge-tenor { background-color: #ffe0b2; color: #e65100; }
+                .badge-basse { background-color: #b0bec5; color: #1a237e; }
+                .pourcentage-vert { color: #27ae60; font-weight: bold; }
+                .pourcentage-rouge { color: #e74c3c; font-weight: bold; }
+                @media print {
+                    body { margin: 0; padding: 10px; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-title">Liste des choristes</div>
+            <div class="print-date">Date d'impression : ${new Date().toLocaleString('fr-FR')}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Photo</th>
+                        <th>Nom complet</th>
+                        <th>Voix</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
     
     choristes.forEach((choriste, index) => {
         let presences = 0;
@@ -1355,32 +1351,30 @@ function imprimerListe() {
         const pourcentage = totalSeances > 0 ? ((presences / totalSeances) * 100).toFixed(1) : 0;
         const couleurPourcentage = pourcentage < 50 ? 'pourcentage-rouge' : 'pourcentage-vert';
         
-        printContent.innerHTML += `
+        tableHTML += `
             <tr>
-                <td>${(index + 1).toString().padStart(3, '0')}</td>
+                <td>${choriste.numero}</td>
                 <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" alt="Photo"></td>
                 <td>${choriste.nomComplet || ''}</td>
                 <td><span class="badge-voix badge-${(choriste.voix || '').toLowerCase()}">${choriste.voix || ''}</span></td>
-                <td>${choriste.communaute || ''}</td>
-                <td>${choriste.telephone || ''}</td>
-                <td>
-                    <span class="${couleurPourcentage}">${pourcentage}%</span>
-                    <div class="progress">
-                        <div class="progress-bar" style="width: ${pourcentage}%"></div>
-                    </div>
-                </td>
+                <td><span class="${couleurPourcentage}">${pourcentage}%</span></td>
             </tr>
         `;
     });
     
-    printContent.innerHTML += `
-            </tbody>
-        </table>
+    tableHTML += `
+                </tbody>
+            </table>
+        </body>
+        </html>
     `;
     
-    document.body.appendChild(printContent);
-    window.print();
-    document.body.removeChild(printContent);
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
 }
 
 document.addEventListener('click', function(event) {
