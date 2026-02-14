@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Chorale - Sous-district Campus</title>
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chorale Campus">
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/diwn8sxtn/image/upload/v1/icon-192.png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 80px;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: white !important;
+            font-size: 1.2rem;
+        }
+        
+        .dashboard-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            background: white;
+            margin-bottom: 20px;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-card h2 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .menu-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .menu-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .menu-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 250px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+        
+        .menu-panel.show {
+            display: block;
+        }
+        
+        .menu-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.3s;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .menu-item:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+        }
+        
+        .content-section {
+            display: none;
+            padding: 20px;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: bold;
+            border-left: 5px solid var(--secondary-color);
+            padding-left: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+        }
+        
+        .table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .table th {
+            font-weight: 600;
+        }
+        
+        .photo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--secondary-color);
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .photo-thumbnail {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        #searchInput, #searchPointage, #searchListe {
+            border-radius: 20px;
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        #searchInput:focus, #searchPointage:focus, #searchListe:focus {
+            border-color: var(--secondary-color);
+            box-shadow: none;
+            outline: none;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, var(--secondary-color), var(--success-color));
+        }
+        
+        .badge-voix {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+        
+        .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
+        .badge-alto { background-color: #b39ddb; color: #311b92; }
+        .badge-tenor { background-color: #ffe0b2; color: #e65100; }
+        .badge-basse { background-color: #b0bec5; color: #1a237e; }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .seance-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .pourcentage-vert {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .pourcentage-rouge {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        /* Modal styles */
+        .modal-password {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .modal-password.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .password-input {
+            font-size: 2rem;
+            letter-spacing: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Install button */
+        .install-btn {
+            position: fixed;
+            bottom: 100px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--success-color), var(--secondary-color));
+            border: none;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.3s;
+            display: none;
+        }
+        
+        .install-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Offline indicator */
+        .offline-indicator {
+            background: var(--danger-color);
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .offline-indicator.show {
+            display: block;
+        }
+        
+        /* Responsive table */
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.9rem;
+            }
+            
+            .photo-thumbnail {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+            
+            .stat-card h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Offline indicator -->
+<div class="offline-indicator" id="offlineIndicator">
+    <i class="bi bi-wifi-off me-2"></i> Mode hors ligne - Les modifications seront synchronisées plus tard
+</div>
+
+<!-- Barre de navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">
+            <i class="bi bi-music-note-beamed me-2"></i>
+            Chorale du Campus
+        </span>
+        <div class="ms-auto d-flex align-items-center">
+            <span class="text-white me-3 d-none d-md-inline">
+                <i class="bi bi-calendar-check me-1"></i>
+                <span id="currentDate"></span>
+            </span>
+            <span class="badge bg-success" id="syncStatus">
+                <i class="bi bi-cloud-check"></i>
+            </span>
+        </div>
+    </div>
+</nav>
+
+<!-- Bouton d'installation PWA -->
+<button class="install-btn no-print" id="installButton" onclick="installPWA()">
+    <i class="bi bi-download"></i>
+</button>
+
+<!-- Menu flottant -->
+<button class="menu-btn no-print" onclick="toggleMenu()">
+    <i class="bi bi-list"></i>
+</button>
+
+<div class="menu-panel no-print" id="menuPanel">
+    <div class="menu-item" onclick="showSection('dashboard')">
+        <i class="bi bi-speedometer2"></i> Tableau de bord
+    </div>
+    <div class="menu-item" onclick="showSection('form')">
+        <i class="bi bi-person-plus"></i> Ajouter un choriste
+    </div>
+    <div class="menu-item" onclick="loadChoristesForPointage(); showSection('pointage')">
+        <i class="bi bi-check-circle"></i> Pointage de présence
+    </div>
+    <div class="menu-item" onclick="loadListeChoristes(); showSection('liste')">
+        <i class="bi bi-list-ul"></i> Liste des choristes
+    </div>
+    <div class="menu-item" onclick="showPasswordModal()">
+        <i class="bi bi-arrow-repeat"></i> Réinitialiser présences
+    </div>
+</div>
+
+<!-- Contenu principal -->
+<div class="container-fluid mt-4">
+    <!-- Tableau de bord -->
+    <div id="dashboard" class="content-section active">
+        <h2 class="section-title">
+            <i class="bi bi-speedometer2 me-2"></i>Tableau de bord
+        </h2>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                    <h3>Total choristes</h3>
+                    <h2 id="totalChoristes">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    <i class="bi bi-calendar-check" style="font-size: 2rem;"></i>
+                    <h3>Séances totales</h3>
+                    <h2 id="totalSeances">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                    <i class="bi bi-percent" style="font-size: 2rem;"></i>
+                    <h3>Moyenne présence</h3>
+                    <h2 id="moyennePresence">0%</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="dashboard-card p-4">
+                    <h5 class="mb-3"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Répartition par voix</h5>
+                    <canvas id="voixChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'ajout de choriste -->
+    <div id="form" class="content-section">
+        <h2 class="section-title">
+            <i class="bi bi-person-plus me-2"></i>Ajouter un choriste
+        </h2>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="dashboard-card p-4">
+                    <div id="uploadStatus" class="alert" style="display: none;"></div>
+                    
+                    <form id="choristeForm">
+                        <div class="mb-4 text-center">
+                            <img id="photoPreview" src="https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar" alt="Aperçu photo" class="photo-preview mb-3">
+                            <div>
+                                <button type="button" class="btn btn-outline-primary" onclick="uploadToCloudinary()">
+                                    <i class="bi bi-cloud-upload me-2"></i>Choisir une photo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nom complet</label>
+                                <input type="text" class="form-control" id="nomComplet" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sexe</label>
+                                <select class="form-select" id="sexe" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="Masculin">Masculin</option>
+                                    <option value="Féminin">Féminin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Voix</label>
+                                <select class="form-select" id="voix" required>
+                                    <option value="">Sélectionner</option>
+                                    <option value="Soprano">Soprano</option>
+                                    <option value="Alto">Alto</option>
+                                    <option value="Ténor">Ténor</option>
+                                    <option value="Basse">Basse</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Communauté</label>
+                                <input type="text" class="form-control" id="communaute" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Numéro de téléphone</label>
+                            <input type="tel" class="form-control" id="telephone" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-save me-2"></i>Enregistrer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pointage de présence -->
+    <div id="pointage" class="content-section">
+        <h2 class="section-title">
+            <i class="bi bi-check-circle me-2"></i>Pointage de présence
+        </h2>
+        
+        <div class="seance-info" id="seanceInfo">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-calendar-plus fs-4 me-2"></i>
+                    <span id="seanceNumero">Aucune séance active</span>
+                </div>
+                <button class="btn btn-light" onclick="creerNouvelleSeance()">
+                    <i class="bi bi-plus-circle me-2"></i>Nouvelle séance
+                </button>
+            </div>
+        </div>
+        
+        <div id="pointageContent" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <input type="text" id="searchPointage" class="form-control" placeholder="Rechercher par nom ou numéro...">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-success w-100" onclick="pointageGlobal()">
+                        <i class="bi bi-check-all me-2"></i>Pointer tous
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover" id="pointageTable">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Photo</th>
+                            <th>Nom complet</th>
+                            <th>Voix</th>
+                            <th>Téléphone</th>
+                            <th class="text-center">Présent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pointageBody">
+                        <tr>
+                            <td colspan="6" class="text-center">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn btn-primary mt-3" onclick="enregistrerPointage()">
+                <i class="bi bi-save me-2"></i>Enregistrer les pointages
+            </button>
+        </div>
+    </div>
+
+    <!-- Liste des choristes -->
+    <div id="liste" class="content-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title">
+                <i class="bi bi-list-ul me-2"></i>Liste des choristes
+            </h2>
+            <button class="btn btn-primary no-print" onclick="imprimerListe()">
+                <i class="bi bi-printer me-2"></i>Imprimer
+            </button>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <input type="text" id="searchListe" class="form-control" placeholder="Rechercher par nom ou numéro...">
+            </div>
+            <div class="col-md-6 text-end">
+                <button class="btn btn-danger" onclick="showPasswordModal()">
+                    <i class="bi bi-arrow-repeat me-2"></i>Réinitialiser présences
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover" id="listeTable">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Photo</th>
+                        <th>Nom complet</th>
+                        <th>Voix</th>
+                        <th>Communauté</th>
+                        <th>Téléphone</th>
+                        <th>Présences</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody id="listeBody">
+                    <tr>
+                        <td colspan="8" class="text-center">Chargement...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de mot de passe pour réinitialisation -->
+<div class="modal-password" id="passwordModal" onclick="if(event.target === this) hidePasswordModal()">
+    <div class="modal-content">
+        <h4 class="text-center mb-4">
+            <i class="bi bi-shield-lock text-primary"></i> Réinitialisation
+        </h4>
+        <p class="text-center text-muted mb-4">
+            Entrez le mot de passe pour réinitialiser toutes les présences
+        </p>
+        <input type="password" class="form-control password-input text-center mb-4" 
+               id="passwordInput" maxlength="4" placeholder="••••" 
+               onkeypress="if(event.key === 'Enter') verifierMotDePasse()">
+        <div class="d-grid gap-2">
+            <button class="btn btn-danger" onclick="verifierMotDePasse()">
+                <i class="bi bi-arrow-repeat me-2"></i>Réinitialiser
+            </button>
+            <button class="btn btn-secondary" onclick="hidePasswordModal()">
+                Annuler
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<!-- Service Worker Registration -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(registration => {
+                    console.log('ServiceWorker enregistré:', registration);
+                })
+                .catch(error => {
+                    console.log('Erreur ServiceWorker:', error);
+                });
+        });
+    }
+</script>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+
+<script>
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDM6w-DOC4SphNJUT4DfZfjZmNI6Jxnzh8",
+  authDomain: "theo-scholl.firebaseapp.com",
+  projectId: "theo-scholl",
+  storageBucket: "theo-scholl.firebasestorage.app",
+  messagingSenderId: "905804735313",
+  appId: "1:905804735313:web:f1249ec356adcc4e1ca970",
+  measurementId: "G-L0QRMGV5FY"
+};
+
+// Initialisation Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Variables globales
+let choristes = [];
+let pointages = [];
+let seances = [];
+let seanceActive = null;
+let currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
+let toast;
+let deferredPrompt;
+let isOnline = navigator.onLine;
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    afficherDate();
+    chargerDonnees();
+    
+    // Initialiser le toast
+    toast = new bootstrap.Toast(document.getElementById('liveToast'));
+    
+    // Gestionnaire formulaire
+    document.getElementById('choristeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        enregistrerChoriste();
+    });
+    
+    // Gestionnaires de recherche
+    document.getElementById('searchPointage').addEventListener('input', filtrerPointage);
+    document.getElementById('searchListe').addEventListener('input', filtrerListe);
+    
+    // Gestionnaire de connexion
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+    
+    // PWA install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installButton').style.display = 'block';
+    });
+    
+    window.addEventListener('appinstalled', () => {
+        document.getElementById('installButton').style.display = 'none';
+        showNotification('Application installée avec succès!');
+    });
+});
+
+function updateOnlineStatus() {
+    isOnline = navigator.onLine;
+    const indicator = document.getElementById('offlineIndicator');
+    const syncStatus = document.getElementById('syncStatus');
+    
+    if (isOnline) {
+        indicator.classList.remove('show');
+        syncStatus.innerHTML = '<i class="bi bi-cloud-check"></i>';
+        syncStatus.classList.remove('bg-warning');
+        syncStatus.classList.add('bg-success');
+    } else {
+        indicator.classList.add('show');
+        syncStatus.innerHTML = '<i class="bi bi-cloud-off"></i>';
+        syncStatus.classList.remove('bg-success');
+        syncStatus.classList.add('bg-warning');
+    }
+}
+
+function afficherDate() {
+    const date = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDate').textContent = date.toLocaleDateString('fr-FR', options);
+}
+
+function showNotification(message, type = 'success') {
+    const toast = document.getElementById('liveToast');
+    const toastBody = document.getElementById('toastMessage');
+    toastBody.textContent = message;
+    toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+    toast.classList.add(`bg-${type}`, 'text-white');
+    bootstrap.Toast.getOrCreateInstance(toast).show();
+}
+
+// Fonctions PWA
+function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('Application installée');
+            }
+            deferredPrompt = null;
+            document.getElementById('installButton').style.display = 'none';
+        });
+    }
+}
+
+// Fonctions de réinitialisation
+function showPasswordModal() {
+    document.getElementById('passwordModal').classList.add('show');
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordInput').focus();
+}
+
+function hidePasswordModal() {
+    document.getElementById('passwordModal').classList.remove('show');
+}
+
+async function verifierMotDePasse() {
+    const password = document.getElementById('passwordInput').value;
+    
+    if (password === '1755') {
+        hidePasswordModal();
+        await reinitialiserPresences();
+    } else {
+        showNotification('Mot de passe incorrect!', 'danger');
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+    }
+}
+
+async function reinitialiserPresences() {
+    try {
+        // Demander confirmation
+        if (!confirm('Êtes-vous sûr de vouloir réinitialiser toutes les présences ? Cette action est irréversible.')) {
+            return;
+        }
+        
+        showNotification('Réinitialisation en cours...', 'warning');
+        
+        // Supprimer tous les pointages
+        const pointagesSnapshot = await db.collection('pointages').get();
+        const batch = db.batch();
+        
+        pointagesSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        // Supprimer toutes les séances
+        const seancesSnapshot = await db.collection('seances').get();
+        seancesSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+        
+        // Mettre à jour les variables globales
+        pointages = [];
+        seances = [];
+        seanceActive = null;
+        
+        // Mettre à jour l'interface
+        await chargerDonnees();
+        
+        // Mettre à jour la section pointage si elle est active
+        if (document.getElementById('pointage').classList.contains('active')) {
+            loadChoristesForPointage();
+        }
+        
+        // Mettre à jour la section liste si elle est active
+        if (document.getElementById('liste').classList.contains('active')) {
+            loadListeChoristes();
+        }
+        
+        showNotification('Toutes les présences ont été réinitialisées avec succès!', 'success');
+        
+    } catch (error) {
+        console.error('Erreur réinitialisation:', error);
+        showNotification('Erreur lors de la réinitialisation: ' + error.message, 'danger');
+    }
+}
+
+// Fonctions existantes (inchangées)
+async function chargerDonnees() {
+    try {
+        await loadChoristes();
+        await loadPointages();
+        await loadSeances();
+        updateDashboard();
+    } catch (error) {
+        console.error("Erreur chargement données:", error);
+        showNotification("Erreur de chargement des données", "danger");
+    }
+}
+
+function toggleMenu() {
+    document.getElementById('menuPanel').classList.toggle('show');
+}
+
+function showSection(sectionId) {
+    // Cacher toutes les sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Afficher la section demandée
+    document.getElementById(sectionId).classList.add('active');
+    
+    // Cacher le menu
+    document.getElementById('menuPanel').classList.remove('show');
+    
+    // Mettre à jour si nécessaire
+    if (sectionId === 'dashboard') {
+        updateDashboard();
+    }
+}
+
+function uploadToCloudinary() {
+    cloudinary.openUploadWidget({
+        cloudName: 'diwn8sxtn',
+        uploadPreset: 'cs_lacolombe',
+        sources: ['local', 'camera'],
+        multiple: false,
+        maxFiles: 1,
+        cropping: true,
+        croppingAspectRatio: 1,
+        showAdvancedOptions: false,
+        styles: {
+            palette: {
+                window: "#ffffff",
+                windowBorder: "#90a0b3",
+                tabIcon: "#0078ff",
+                menuIcons: "#5A6169",
+                textDark: "#000000",
+                textLight: "#FFFFFF",
+                link: "#0078ff",
+                action: "#FF620C",
+                inactiveTabIcon: "#0E2F5A",
+                error: "#F44235",
+                inProgress: "#0078ff",
+                complete: "#20B832",
+                sourceBg: "#E4EBF1"
+            }
+        }
+    }, (error, result) => {
+        if (!error && result && result.event === "success") {
+            currentPhotoUrl = result.info.secure_url;
+            document.getElementById('photoPreview').src = currentPhotoUrl;
+            showNotification("Photo téléchargée avec succès!");
+        }
+    });
+}
+
+async function enregistrerChoriste() {
+    // Validation des champs
+    const nomComplet = document.getElementById('nomComplet').value;
+    const sexe = document.getElementById('sexe').value;
+    const voix = document.getElementById('voix').value;
+    const communaute = document.getElementById('communaute').value;
+    const telephone = document.getElementById('telephone').value;
+    
+    if (!nomComplet || !sexe || !voix || !communaute || !telephone) {
+        showNotification("Veuillez remplir tous les champs", "warning");
+        return;
+    }
+    
+    try {
+        const choriste = {
+            nomComplet: nomComplet,
+            sexe: sexe,
+            voix: voix,
+            communaute: communaute,
+            telephone: telephone,
+            photo: currentPhotoUrl,
+            dateInscription: new Date().toISOString()
+        };
+        
+        await db.collection('choristes').add(choriste);
+        
+        showNotification("Choriste enregistré avec succès!");
+        
+        // Réinitialiser le formulaire
+        document.getElementById('choristeForm').reset();
+        currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
+        document.getElementById('photoPreview').src = currentPhotoUrl;
+        
+        // Recharger les données
+        await chargerDonnees();
+        
+        // Aller au tableau de bord
+        showSection('dashboard');
+        
+    } catch (error) {
+        console.error("Erreur enregistrement:", error);
+        showNotification("Erreur lors de l'enregistrement: " + error.message, "danger");
+    }
+}
+
+async function loadChoristes() {
+    try {
+        const snapshot = await db.collection('choristes').orderBy('nomComplet').get();
+        choristes = snapshot.docs.map((doc, index) => ({
+            id: doc.id,
+            numero: (index + 1).toString().padStart(3, '0'),
+            ...doc.data()
+        }));
+        return choristes;
+    } catch (error) {
+        console.error('Erreur chargement choristes:', error);
+        throw error;
+    }
+}
+
+async function loadPointages() {
+    try {
+        const snapshot = await db.collection('pointages').get();
+        pointages = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        return pointages;
+    } catch (error) {
+        console.error('Erreur chargement pointages:', error);
+        throw error;
+    }
+}
+
+async function loadSeances() {
+    try {
+        const snapshot = await db.collection('seances').orderBy('numero', 'desc').get();
+        seances = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        return seances;
+    } catch (error) {
+        console.error('Erreur chargement séances:', error);
+        throw error;
+    }
+}
+
+function updateDashboard() {
+    document.getElementById('totalChoristes').textContent = choristes.length;
+    document.getElementById('totalSeances').textContent = seances.length;
+    
+    // Calcul de la moyenne des présences
+    if (seances.length > 0 && choristes.length > 0) {
+        let totalPresences = 0;
+        seances.forEach(seance => {
+            const pointagesSeance = pointages.filter(p => p.seanceId === seance.id && p.present === true);
+            totalPresences += pointagesSeance.length;
+        });
+        
+        const moyenne = (totalPresences / (seances.length * choristes.length) * 100).toFixed(1);
+        document.getElementById('moyennePresence').textContent = moyenne + '%';
+    } else {
+        document.getElementById('moyennePresence').textContent = '0%';
+    }
+    
+    updateVoixChart();
+}
+
+function updateVoixChart() {
+    const voixCount = {
+        'Soprano': 0,
+        'Alto': 0,
+        'Ténor': 0,
+        'Basse': 0
+    };
+    
+    choristes.forEach(c => {
+        if (voixCount[c.voix] !== undefined) {
+            voixCount[c.voix]++;
+        }
+    });
+    
+    const ctx = document.getElementById('voixChart').getContext('2d');
+    
+    // Détruire l'ancien graphique s'il existe
+    if (window.voixChart) {
+        window.voixChart.destroy();
+    }
+    
+    window.voixChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(voixCount),
+            datasets: [{
+                data: Object.values(voixCount),
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true
+        }
+    });
+}
+
+async function creerNouvelleSeance() {
+    try {
+        const nouveauNumero = seances.length + 1;
+        const seance = {
+            numero: nouveauNumero,
+            date: new Date().toISOString().split('T')[0],
+            dateCreation: new Date().toISOString()
+        };
+        
+        const docRef = await db.collection('seances').add(seance);
+        seance.id = docRef.id;
+        seances.unshift(seance);
+        seanceActive = seance;
+        
+        document.getElementById('seanceNumero').innerHTML = `<i class="bi bi-calendar-check me-2"></i>Séance n°${seance.numero} - ${new Date().toLocaleDateString('fr-FR')}`;
+        document.getElementById('pointageContent').style.display = 'block';
+        
+        // Réinitialiser les checkboxes
+        await loadChoristesForPointage();
+        
+        showNotification(`Séance n°${seance.numero} créée avec succès!`);
+        updateDashboard();
+        
+    } catch (error) {
+        console.error('Erreur création séance:', error);
+        showNotification("Erreur lors de la création de la séance", "danger");
+    }
+}
+
+async function loadChoristesForPointage() {
+    await loadChoristes();
+    
+    if (seances.length === 0) {
+        document.getElementById('seanceInfo').innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-exclamation-circle fs-4 me-2"></i>
+                    <span>Aucune séance de pointage. Créez une nouvelle séance pour commencer.</span>
+                </div>
+                <button class="btn btn-light" onclick="creerNouvelleSeance()">
+                    <i class="bi bi-plus-circle me-2"></i>Nouvelle séance
+                </button>
+            </div>
+        `;
+        document.getElementById('pointageContent').style.display = 'none';
+        return;
+    }
+    
+    // Prendre la dernière séance comme active
+    seanceActive = seances[0];
+    
+    document.getElementById('seanceInfo').innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-calendar-check fs-4 me-2"></i>
+                <span id="seanceNumero">Séance n°${seanceActive.numero} - ${new Date().toLocaleDateString('fr-FR')}</span>
+            </div>
+            <button class="btn btn-light" onclick="creerNouvelleSeance()">
+                <i class="bi bi-plus-circle me-2"></i>Nouvelle séance
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('pointageContent').style.display = 'block';
+    
+    let html = '';
+    choristes.forEach((choriste, index) => {
+        // Vérifier si le choriste a déjà été pointé pour cette séance
+        const pointageExistant = pointages.find(p => p.seanceId === seanceActive.id && p.choristeId === choriste.id);
+        
+        html += `
+            <tr>
+                <td>${choriste.numero}</td>
+                <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" class="photo-thumbnail" alt="Photo"></td>
+                <td>${choriste.nomComplet}</td>
+                <td><span class="badge-voix badge-${choriste.voix.toLowerCase()}">${choriste.voix}</span></td>
+                <td>${choriste.telephone}</td>
+                <td class="text-center">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input pointage-checkbox" type="checkbox" data-choriste-id="${choriste.id}" value="" ${pointageExistant ? 'checked' : ''}>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (html === '') {
+        html = '<tr><td colspan="6" class="text-center">Aucun choriste enregistré</td></tr>';
+    }
+    
+    document.getElementById('pointageBody').innerHTML = html;
+}
+
+function filtrerPointage() {
+    const searchTerm = document.getElementById('searchPointage').value.toLowerCase();
+    const rows = document.querySelectorAll('#pointageBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+function pointageGlobal() {
+    document.querySelectorAll('.pointage-checkbox').forEach(cb => {
+        cb.checked = true;
+    });
+    showNotification("Tous les choristes ont été sélectionnés");
+}
+
+async function enregistrerPointage() {
+    if (!seanceActive) {
+        showNotification("Veuillez d'abord créer une séance", "warning");
+        return;
+    }
+    
+    const checkboxes = document.querySelectorAll('.pointage-checkbox');
+    
+    try {
+        // Supprimer les anciens pointages de cette séance
+        const existingPointages = await db.collection('pointages')
+            .where('seanceId', '==', seanceActive.id)
+            .get();
+        
+        const batch = db.batch();
+        existingPointages.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        
+        // Ajouter les nouveaux pointages
+        let compteurPresent = 0;
+        for (const cb of checkboxes) {
+            const choristeId = cb.dataset.choristeId;
+            const estPresent = cb.checked;
+            
+            if (estPresent) compteurPresent++;
+            
+            const docRef = db.collection('pointages').doc();
+            batch.set(docRef, {
+                seanceId: seanceActive.id,
+                choristeId: choristeId,
+                date: seanceActive.date,
+                present: estPresent
+            });
+        }
+        
+        await batch.commit();
+        
+        showNotification(`Pointages enregistrés : ${compteurPresent}/${checkboxes.length} présents`);
+        await loadPointages();
+        updateDashboard();
+        showSection('dashboard');
+        
+    } catch (error) {
+        console.error('Erreur pointage:', error);
+        showNotification("Erreur lors de l'enregistrement des pointages", "danger");
+    }
+}
+
+async function loadListeChoristes() {
+    await loadChoristes();
+    await loadPointages();
+    await loadSeances();
+    
+    let html = '';
+    choristes.forEach((choriste, index) => {
+        // Compter les présences par séance
+        let totalSeances = seances.length;
+        let presences = 0;
+        
+        seances.forEach(seance => {
+            const pointage = pointages.find(p => p.seanceId === seance.id && p.choristeId === choriste.id);
+            if (pointage && pointage.present) {
+                presences++;
+            }
+        });
+        
+        const pourcentage = totalSeances > 0 ? ((presences / totalSeances) * 100).toFixed(1) : 0;
+        const couleurPourcentage = pourcentage < 50 ? 'pourcentage-rouge' : 'pourcentage-vert';
+        
+        html += `
+            <tr>
+                <td>${choriste.numero}</td>
+                <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" class="photo-thumbnail" alt="Photo"></td>
+                <td>${choriste.nomComplet}</td>
+                <td><span class="badge-voix badge-${choriste.voix.toLowerCase()}">${choriste.voix}</span></td>
+                <td>${choriste.communaute}</td>
+                <td>${choriste.telephone}</td>
+                <td>${presences}/${totalSeances}</td>
+                <td>
+                    <span class="${couleurPourcentage}">${pourcentage}%</span>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${pourcentage}%"></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (html === '') {
+        html = '<tr><td colspan="8" class="text-center">Aucun choriste enregistré</td></tr>';
+    }
+    
+    document.getElementById('listeBody').innerHTML = html;
+}
+
+function filtrerListe() {
+    const searchTerm = document.getElementById('searchListe').value.toLowerCase();
+    const rows = document.querySelectorAll('#listeBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+}
+
+function imprimerListe() {
+    // Vérifier si les données sont chargées
+    if (!choristes || choristes.length === 0) {
+        showNotification("Aucune donnée à imprimer", "warning");
+        return;
+    }
+
+    // Récupérer les données directement depuis les variables globales
+    let tableHTML = `
+        <html>
+        <head>
+            <title>Liste des choristes</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                }
+                .print-title {
+                    font-size: 18pt;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    text-align: center;
+                    color: #2c3e50;
+                }
+                .print-date {
+                    font-size: 11pt;
+                    margin-bottom: 20px;
+                    text-align: right;
+                    color: #666;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 12pt;
+                }
+                th {
+                    background-color: #2c3e50;
+                    color: white;
+                    padding: 10px;
+                    text-align: left;
+                    border: 1px solid #000;
+                }
+                td {
+                    padding: 8px;
+                    border: 1px solid #000;
+                    vertical-align: middle;
+                }
+                img {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                }
+                .badge-voix {
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    font-size: 11pt;
+                    display: inline-block;
+                }
+                .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
+                .badge-alto { background-color: #b39ddb; color: #311b92; }
+                .badge-tenor { background-color: #ffe0b2; color: #e65100; }
+                .badge-basse { background-color: #b0bec5; color: #1a237e; }
+                .progress {
+                    width: 100%;
+                    height: 12px;
+                    background-color: #f0f0f0;
+                    border: 1px solid #000;
+                    margin-top: 5px;
+                }
+                .progress-bar {
+                    height: 100%;
+                    background: linear-gradient(135deg, #3498db, #27ae60);
+                }
+                .pourcentage-vert { color: #27ae60; font-weight: bold; }
+                .pourcentage-rouge { color: #e74c3c; font-weight: bold; }
+                @media print {
+                    body { margin: 0; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-title">Liste des choristes</div>
+            <div class="print-date">Date d'impression : ${new Date().toLocaleString('fr-FR')}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Photo</th>
+                        <th>Nom complet</th>
+                        <th>Voix</th>
+                        <th>Communauté</th>
+                        <th>Téléphone</th>
+                        <th>%</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    // Calculer les présences pour chaque choriste
+    const totalSeances = seances.length;
+    
+    choristes.forEach((choriste, index) => {
+        // Compter les présences par séance
+        let presences = 0;
+        seances.forEach(seance => {
+            const pointage = pointages.find(p => p.seanceId === seance.id && p.choristeId === choriste.id);
+            if (pointage && pointage.present) {
+                presences++;
+            }
+        });
+        
+        const pourcentage = totalSeances > 0 ? ((presences / totalSeances) * 100).toFixed(1) : 0;
+        const couleurPourcentage = pourcentage < 50 ? 'pourcentage-rouge' : 'pourcentage-vert';
+        
+        tableHTML += `
+            <tr>
+                <td>${(index + 1).toString().padStart(3, '0')}</td>
+                <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" alt="Photo"></td>
+                <td>${choriste.nomComplet || ''}</td>
+                <td><span class="badge-voix badge-${(choriste.voix || '').toLowerCase()}">${choriste.voix || ''}</span></td>
+                <td>${choriste.communaute || ''}</td>
+                <td>${choriste.telephone || ''}</td>
+                <td>
+                    <span class="${couleurPourcentage}">${pourcentage}%</span>
+                    <div class="progress">
+                        <div class="progress-bar" style="width: ${pourcentage}%"></div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    // Créer une nouvelle fenêtre pour l'impression
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+    
+    // Attendre que les images soient chargées avant d'imprimer
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+}
+
+// Fermer le menu en cliquant ailleurs
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('menuPanel');
+    const btn = document.querySelector('.menu-btn');
+    
+    if (menu && btn && !menu.contains(event.target) && !btn.contains(event.target)) {
+        menu.classList.remove('show');
+    }
+});
+
+// Recharger les données périodiquement
+setInterval(chargerDonnees, 30000); // Toutes les 30 secondes
+</script>
+</body>
+</html>
