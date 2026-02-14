@@ -12,6 +12,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chorale Campus">
     <link rel="apple-touch-icon" href="https://res.cloudinary.com/diwn8sxtn/image/upload/v1/icon-192.png">
+
+<!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="icon-192x192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -359,6 +369,15 @@
                 font-size: 2rem;
             }
         }
+
+        /* Cache les notifications d'erreur */
+        #uploadStatus {
+            display: none !important;
+        }
+        
+        .alert {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -466,7 +485,7 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="dashboard-card p-4">
-                    <div id="uploadStatus" class="alert" style="display: none;"></div>
+                    <div id="uploadStatus" style="display: none;"></div>
                     
                     <form id="choristeForm">
                         <div class="mb-4 text-center">
@@ -649,18 +668,6 @@
     </div>
 </div>
 
-<!-- Toast de notification -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <i class="bi bi-info-circle me-2"></i>
-            <strong class="me-auto">Notification</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body" id="toastMessage"></div>
-    </div>
-</div>
-
 <!-- Service Worker Registration -->
 <script>
     if ('serviceWorker' in navigator) {
@@ -705,7 +712,6 @@ let pointages = [];
 let seances = [];
 let seanceActive = null;
 let currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
-let toast;
 let deferredPrompt;
 let isOnline = navigator.onLine;
 
@@ -713,9 +719,6 @@ let isOnline = navigator.onLine;
 document.addEventListener('DOMContentLoaded', function() {
     afficherDate();
     chargerDonnees();
-    
-    // Initialiser le toast
-    toast = new bootstrap.Toast(document.getElementById('liveToast'));
     
     // Gestionnaire formulaire
     document.getElementById('choristeForm').addEventListener('submit', function(e) {
@@ -741,7 +744,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('appinstalled', () => {
         document.getElementById('installButton').style.display = 'none';
-        showNotification('Application installée avec succès!');
     });
 });
 
@@ -767,15 +769,6 @@ function afficherDate() {
     const date = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('currentDate').textContent = date.toLocaleDateString('fr-FR', options);
-}
-
-function showNotification(message, type = 'success') {
-    const toast = document.getElementById('liveToast');
-    const toastBody = document.getElementById('toastMessage');
-    toastBody.textContent = message;
-    toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
-    toast.classList.add(`bg-${type}`, 'text-white');
-    bootstrap.Toast.getOrCreateInstance(toast).show();
 }
 
 // Fonctions PWA
@@ -810,7 +803,6 @@ async function verifierMotDePasse() {
         hidePasswordModal();
         await reinitialiserPresences();
     } else {
-        showNotification('Mot de passe incorrect!', 'danger');
         document.getElementById('passwordInput').value = '';
         document.getElementById('passwordInput').focus();
     }
@@ -818,14 +810,10 @@ async function verifierMotDePasse() {
 
 async function reinitialiserPresences() {
     try {
-        // Demander confirmation
         if (!confirm('Êtes-vous sûr de vouloir réinitialiser toutes les présences ? Cette action est irréversible.')) {
             return;
         }
         
-        showNotification('Réinitialisation en cours...', 'warning');
-        
-        // Supprimer tous les pointages
         const pointagesSnapshot = await db.collection('pointages').get();
         const batch = db.batch();
         
@@ -833,7 +821,6 @@ async function reinitialiserPresences() {
             batch.delete(doc.ref);
         });
         
-        // Supprimer toutes les séances
         const seancesSnapshot = await db.collection('seances').get();
         seancesSnapshot.docs.forEach(doc => {
             batch.delete(doc.ref);
@@ -841,33 +828,25 @@ async function reinitialiserPresences() {
         
         await batch.commit();
         
-        // Mettre à jour les variables globales
         pointages = [];
         seances = [];
         seanceActive = null;
         
-        // Mettre à jour l'interface
         await chargerDonnees();
         
-        // Mettre à jour la section pointage si elle est active
         if (document.getElementById('pointage').classList.contains('active')) {
             loadChoristesForPointage();
         }
         
-        // Mettre à jour la section liste si elle est active
         if (document.getElementById('liste').classList.contains('active')) {
             loadListeChoristes();
         }
         
-        showNotification('Toutes les présences ont été réinitialisées avec succès!', 'success');
-        
     } catch (error) {
         console.error('Erreur réinitialisation:', error);
-        showNotification('Erreur lors de la réinitialisation: ' + error.message, 'danger');
     }
 }
 
-// Fonctions existantes (inchangées)
 async function chargerDonnees() {
     try {
         await loadChoristes();
@@ -876,7 +855,6 @@ async function chargerDonnees() {
         updateDashboard();
     } catch (error) {
         console.error("Erreur chargement données:", error);
-        showNotification("Erreur de chargement des données", "danger");
     }
 }
 
@@ -885,18 +863,13 @@ function toggleMenu() {
 }
 
 function showSection(sectionId) {
-    // Cacher toutes les sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // Afficher la section demandée
     document.getElementById(sectionId).classList.add('active');
-    
-    // Cacher le menu
     document.getElementById('menuPanel').classList.remove('show');
     
-    // Mettre à jour si nécessaire
     if (sectionId === 'dashboard') {
         updateDashboard();
     }
@@ -933,13 +906,11 @@ function uploadToCloudinary() {
         if (!error && result && result.event === "success") {
             currentPhotoUrl = result.info.secure_url;
             document.getElementById('photoPreview').src = currentPhotoUrl;
-            showNotification("Photo téléchargée avec succès!");
         }
     });
 }
 
 async function enregistrerChoriste() {
-    // Validation des champs
     const nomComplet = document.getElementById('nomComplet').value;
     const sexe = document.getElementById('sexe').value;
     const voix = document.getElementById('voix').value;
@@ -947,7 +918,6 @@ async function enregistrerChoriste() {
     const telephone = document.getElementById('telephone').value;
     
     if (!nomComplet || !sexe || !voix || !communaute || !telephone) {
-        showNotification("Veuillez remplir tous les champs", "warning");
         return;
     }
     
@@ -964,22 +934,15 @@ async function enregistrerChoriste() {
         
         await db.collection('choristes').add(choriste);
         
-        showNotification("Choriste enregistré avec succès!");
-        
-        // Réinitialiser le formulaire
         document.getElementById('choristeForm').reset();
         currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
         document.getElementById('photoPreview').src = currentPhotoUrl;
         
-        // Recharger les données
         await chargerDonnees();
-        
-        // Aller au tableau de bord
         showSection('dashboard');
         
     } catch (error) {
         console.error("Erreur enregistrement:", error);
-        showNotification("Erreur lors de l'enregistrement: " + error.message, "danger");
     }
 }
 
@@ -1030,7 +993,6 @@ function updateDashboard() {
     document.getElementById('totalChoristes').textContent = choristes.length;
     document.getElementById('totalSeances').textContent = seances.length;
     
-    // Calcul de la moyenne des présences
     if (seances.length > 0 && choristes.length > 0) {
         let totalPresences = 0;
         seances.forEach(seance => {
@@ -1063,7 +1025,6 @@ function updateVoixChart() {
     
     const ctx = document.getElementById('voixChart').getContext('2d');
     
-    // Détruire l'ancien graphique s'il existe
     if (window.voixChart) {
         window.voixChart.destroy();
     }
@@ -1101,15 +1062,11 @@ async function creerNouvelleSeance() {
         document.getElementById('seanceNumero').innerHTML = `<i class="bi bi-calendar-check me-2"></i>Séance n°${seance.numero} - ${new Date().toLocaleDateString('fr-FR')}`;
         document.getElementById('pointageContent').style.display = 'block';
         
-        // Réinitialiser les checkboxes
         await loadChoristesForPointage();
-        
-        showNotification(`Séance n°${seance.numero} créée avec succès!`);
         updateDashboard();
         
     } catch (error) {
         console.error('Erreur création séance:', error);
-        showNotification("Erreur lors de la création de la séance", "danger");
     }
 }
 
@@ -1132,7 +1089,6 @@ async function loadChoristesForPointage() {
         return;
     }
     
-    // Prendre la dernière séance comme active
     seanceActive = seances[0];
     
     document.getElementById('seanceInfo').innerHTML = `
@@ -1151,7 +1107,6 @@ async function loadChoristesForPointage() {
     
     let html = '';
     choristes.forEach((choriste, index) => {
-        // Vérifier si le choriste a déjà été pointé pour cette séance
         const pointageExistant = pointages.find(p => p.seanceId === seanceActive.id && p.choristeId === choriste.id);
         
         html += `
@@ -1191,19 +1146,16 @@ function pointageGlobal() {
     document.querySelectorAll('.pointage-checkbox').forEach(cb => {
         cb.checked = true;
     });
-    showNotification("Tous les choristes ont été sélectionnés");
 }
 
 async function enregistrerPointage() {
     if (!seanceActive) {
-        showNotification("Veuillez d'abord créer une séance", "warning");
         return;
     }
     
     const checkboxes = document.querySelectorAll('.pointage-checkbox');
     
     try {
-        // Supprimer les anciens pointages de cette séance
         const existingPointages = await db.collection('pointages')
             .where('seanceId', '==', seanceActive.id)
             .get();
@@ -1213,7 +1165,6 @@ async function enregistrerPointage() {
             batch.delete(doc.ref);
         });
         
-        // Ajouter les nouveaux pointages
         let compteurPresent = 0;
         for (const cb of checkboxes) {
             const choristeId = cb.dataset.choristeId;
@@ -1232,14 +1183,12 @@ async function enregistrerPointage() {
         
         await batch.commit();
         
-        showNotification(`Pointages enregistrés : ${compteurPresent}/${checkboxes.length} présents`);
         await loadPointages();
         updateDashboard();
         showSection('dashboard');
         
     } catch (error) {
         console.error('Erreur pointage:', error);
-        showNotification("Erreur lors de l'enregistrement des pointages", "danger");
     }
 }
 
@@ -1250,7 +1199,6 @@ async function loadListeChoristes() {
     
     let html = '';
     choristes.forEach((choriste, index) => {
-        // Compter les présences par séance
         let totalSeances = seances.length;
         let presences = 0;
         
@@ -1301,109 +1249,101 @@ function filtrerListe() {
 }
 
 function imprimerListe() {
-    // Vérifier si les données sont chargées
     if (!choristes || choristes.length === 0) {
-        showNotification("Aucune donnée à imprimer", "warning");
         return;
     }
 
-    // Récupérer les données directement depuis les variables globales
-    let tableHTML = `
-        <html>
-        <head>
-            <title>Liste des choristes</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    padding: 20px;
-                }
-                .print-title {
-                    font-size: 18pt;
-                    font-weight: bold;
-                    margin-bottom: 20px;
-                    text-align: center;
-                    color: #2c3e50;
-                }
-                .print-date {
-                    font-size: 11pt;
-                    margin-bottom: 20px;
-                    text-align: right;
-                    color: #666;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    font-size: 12pt;
-                }
-                th {
-                    background-color: #2c3e50;
-                    color: white;
-                    padding: 10px;
-                    text-align: left;
-                    border: 1px solid #000;
-                }
-                td {
-                    padding: 8px;
-                    border: 1px solid #000;
-                    vertical-align: middle;
-                }
-                img {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-                .badge-voix {
-                    padding: 4px 8px;
-                    border-radius: 12px;
-                    font-size: 11pt;
-                    display: inline-block;
-                }
-                .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
-                .badge-alto { background-color: #b39ddb; color: #311b92; }
-                .badge-tenor { background-color: #ffe0b2; color: #e65100; }
-                .badge-basse { background-color: #b0bec5; color: #1a237e; }
-                .progress {
-                    width: 100%;
-                    height: 12px;
-                    background-color: #f0f0f0;
-                    border: 1px solid #000;
-                    margin-top: 5px;
-                }
-                .progress-bar {
-                    height: 100%;
-                    background: linear-gradient(135deg, #3498db, #27ae60);
-                }
-                .pourcentage-vert { color: #27ae60; font-weight: bold; }
-                .pourcentage-rouge { color: #e74c3c; font-weight: bold; }
-                @media print {
-                    body { margin: 0; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="print-title">Liste des choristes</div>
-            <div class="print-date">Date d'impression : ${new Date().toLocaleString('fr-FR')}</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>N°</th>
-                        <th>Photo</th>
-                        <th>Nom complet</th>
-                        <th>Voix</th>
-                        <th>Communauté</th>
-                        <th>Téléphone</th>
-                        <th>%</th>
-                    </tr>
-                </thead>
-                <tbody>
+    const printContent = document.createElement('div');
+    printContent.innerHTML = `
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                margin: 0;
+            }
+            .print-title {
+                font-size: 18pt;
+                font-weight: bold;
+                margin-bottom: 20px;
+                text-align: center;
+                color: #2c3e50;
+            }
+            .print-date {
+                font-size: 11pt;
+                margin-bottom: 20px;
+                text-align: right;
+                color: #666;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12pt;
+            }
+            th {
+                background-color: #2c3e50;
+                color: white;
+                padding: 10px;
+                text-align: left;
+                border: 1px solid #000;
+            }
+            td {
+                padding: 8px;
+                border: 1px solid #000;
+                vertical-align: middle;
+            }
+            img {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+            .badge-voix {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 11pt;
+                display: inline-block;
+            }
+            .badge-soprano { background-color: #f8bbd0; color: #880e4f; }
+            .badge-alto { background-color: #b39ddb; color: #311b92; }
+            .badge-tenor { background-color: #ffe0b2; color: #e65100; }
+            .badge-basse { background-color: #b0bec5; color: #1a237e; }
+            .progress {
+                width: 100%;
+                height: 12px;
+                background-color: #f0f0f0;
+                border: 1px solid #000;
+                margin-top: 5px;
+            }
+            .progress-bar {
+                height: 100%;
+                background: linear-gradient(135deg, #3498db, #27ae60);
+            }
+            .pourcentage-vert { color: #27ae60; font-weight: bold; }
+            .pourcentage-rouge { color: #e74c3c; font-weight: bold; }
+            @media print {
+                body { margin: 0; padding: 15px; }
+            }
+        </style>
+        <div class="print-title">Liste des choristes</div>
+        <div class="print-date">Date d'impression : ${new Date().toLocaleString('fr-FR')}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Photo</th>
+                    <th>Nom complet</th>
+                    <th>Voix</th>
+                    <th>Communauté</th>
+                    <th>Téléphone</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody>
     `;
     
-    // Calculer les présences pour chaque choriste
     const totalSeances = seances.length;
     
     choristes.forEach((choriste, index) => {
-        // Compter les présences par séance
         let presences = 0;
         seances.forEach(seance => {
             const pointage = pointages.find(p => p.seanceId === seance.id && p.choristeId === choriste.id);
@@ -1415,7 +1355,7 @@ function imprimerListe() {
         const pourcentage = totalSeances > 0 ? ((presences / totalSeances) * 100).toFixed(1) : 0;
         const couleurPourcentage = pourcentage < 50 ? 'pourcentage-rouge' : 'pourcentage-vert';
         
-        tableHTML += `
+        printContent.innerHTML += `
             <tr>
                 <td>${(index + 1).toString().padStart(3, '0')}</td>
                 <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" alt="Photo"></td>
@@ -1433,28 +1373,16 @@ function imprimerListe() {
         `;
     });
     
-    tableHTML += `
-                </tbody>
-            </table>
-        </body>
-        </html>
+    printContent.innerHTML += `
+            </tbody>
+        </table>
     `;
     
-    // Créer une nouvelle fenêtre pour l'impression
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(tableHTML);
-    printWindow.document.close();
-    
-    // Attendre que les images soient chargées avant d'imprimer
-    printWindow.onload = function() {
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 500);
-    };
+    document.body.appendChild(printContent);
+    window.print();
+    document.body.removeChild(printContent);
 }
 
-// Fermer le menu en cliquant ailleurs
 document.addEventListener('click', function(event) {
     const menu = document.getElementById('menuPanel');
     const btn = document.querySelector('.menu-btn');
@@ -1464,8 +1392,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Recharger les données périodiquement
-setInterval(chargerDonnees, 30000); // Toutes les 30 secondes
+setInterval(chargerDonnees, 30000);
 </script>
 </body>
 </html>
