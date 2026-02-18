@@ -11,17 +11,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chorale Campus">
+
+
+  <meta name="version" content="2.1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+ 
     <link rel="apple-touch-icon" href="https://res.cloudinary.com/diwn8sxtn/image/upload/v1/icon-192.png">
 
-<!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon" href="icon-192x192.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
-  <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
-  <link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
 
-  <!-- Manifest -->
-  <link rel="manifest" href="manifest.json">
-
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -314,6 +318,30 @@
             font-weight: bold;
         }
         
+        /* Modal modification */
+        .modal-modification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .modal-modification.show {
+            display: flex;
+        }
+        
+        .modal-modification .modal-content {
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
         /* Install button */
         .install-btn {
             position: fixed;
@@ -348,6 +376,22 @@
         
         .offline-indicator.show {
             display: block;
+        }
+        
+        /* Action buttons */
+        .action-btn {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .edit-btn {
+            color: var(--secondary-color);
+        }
+        
+        .edit-btn:hover {
+            color: var(--primary-color);
         }
         
         /* Responsive table */
@@ -633,11 +677,12 @@
                         <th>Téléphone</th>
                         <th>Présences</th>
                         <th>%</th>
+                        <th class="no-print">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="listeBody">
                     <tr>
-                        <td colspan="8" class="text-center">Chargement...</td>
+                        <td colspan="9" class="text-center">Chargement...</td>
                     </tr>
                 </tbody>
             </table>
@@ -662,6 +707,72 @@
                 <i class="bi bi-arrow-repeat me-2"></i>Réinitialiser
             </button>
             <button class="btn btn-secondary" onclick="hidePasswordModal()">
+                Annuler
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de modification choriste -->
+<div class="modal-modification" id="editModal" onclick="if(event.target === this) hideEditModal()">
+    <div class="modal-content">
+        <h4 class="text-center mb-4">
+            <i class="bi bi-pencil-square text-primary"></i> Modifier choriste
+        </h4>
+        
+        <div class="mb-4 text-center">
+            <img id="editPhotoPreview" src="https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar" alt="Aperçu photo" class="photo-preview mb-3">
+            <div>
+                <button type="button" class="btn btn-outline-primary" onclick="uploadEditPhoto()">
+                    <i class="bi bi-cloud-upload me-2"></i>Changer la photo
+                </button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nom complet</label>
+                <input type="text" class="form-control" id="editNomComplet" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Sexe</label>
+                <select class="form-select" id="editSexe" required>
+                    <option value="">Sélectionner</option>
+                    <option value="Masculin">Masculin</option>
+                    <option value="Féminin">Féminin</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Voix</label>
+                <select class="form-select" id="editVoix" required>
+                    <option value="">Sélectionner</option>
+                    <option value="Soprano">Soprano</option>
+                    <option value="Alto">Alto</option>
+                    <option value="Ténor">Ténor</option>
+                    <option value="Basse">Basse</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Communauté</label>
+                <input type="text" class="form-control" id="editCommunaute" required>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Numéro de téléphone</label>
+            <input type="tel" class="form-control" id="editTelephone" required>
+        </div>
+        
+        <input type="hidden" id="editChoristeId">
+        
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" onclick="enregistrerModification()">
+                <i class="bi bi-save me-2"></i>Enregistrer les modifications
+            </button>
+            <button class="btn btn-secondary" onclick="hideEditModal()">
                 Annuler
             </button>
         </div>
@@ -712,6 +823,7 @@ let pointages = [];
 let seances = [];
 let seanceActive = null;
 let currentPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
+let currentEditPhotoUrl = 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
 let deferredPrompt;
 let isOnline = navigator.onLine;
 let prochainNumero = 1;
@@ -907,6 +1019,41 @@ function uploadToCloudinary() {
         if (!error && result && result.event === "success") {
             currentPhotoUrl = result.info.secure_url;
             document.getElementById('photoPreview').src = currentPhotoUrl;
+        }
+    });
+}
+
+function uploadEditPhoto() {
+    cloudinary.openUploadWidget({
+        cloudName: 'diwn8sxtn',
+        uploadPreset: 'cs_lacolombe',
+        sources: ['local', 'camera'],
+        multiple: false,
+        maxFiles: 1,
+        cropping: true,
+        croppingAspectRatio: 1,
+        showAdvancedOptions: false,
+        styles: {
+            palette: {
+                window: "#ffffff",
+                windowBorder: "#90a0b3",
+                tabIcon: "#0078ff",
+                menuIcons: "#5A6169",
+                textDark: "#000000",
+                textLight: "#FFFFFF",
+                link: "#0078ff",
+                action: "#FF620C",
+                inactiveTabIcon: "#0E2F5A",
+                error: "#F44235",
+                inProgress: "#0078ff",
+                complete: "#20B832",
+                sourceBg: "#E4EBF1"
+            }
+        }
+    }, (error, result) => {
+        if (!error && result && result.event === "success") {
+            currentEditPhotoUrl = result.info.secure_url;
+            document.getElementById('editPhotoPreview').src = currentEditPhotoUrl;
         }
     });
 }
@@ -1232,12 +1379,15 @@ async function loadListeChoristes() {
                         <div class="progress-bar" style="width: ${pourcentage}%"></div>
                     </div>
                 </td>
+                <td class="no-print">
+                    <i class="bi bi-pencil-square action-btn edit-btn" onclick="ouvrirModification('${choriste.id}')" title="Modifier"></i>
+                </td>
             </tr>
         `;
     });
     
     if (html === '') {
-        html = '<tr><td colspan="8" class="text-center">Aucun choriste enregistré</td></tr>';
+        html = '<tr><td colspan="9" class="text-center">Aucun choriste enregistré</td></tr>';
     }
     
     document.getElementById('listeBody').innerHTML = html;
@@ -1251,6 +1401,61 @@ function filtrerListe() {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';
     });
+}
+
+function ouvrirModification(choristeId) {
+    const choriste = choristes.find(c => c.id === choristeId);
+    if (!choriste) return;
+    
+    document.getElementById('editChoristeId').value = choriste.id;
+    document.getElementById('editNomComplet').value = choriste.nomComplet || '';
+    document.getElementById('editSexe').value = choriste.sexe || '';
+    document.getElementById('editVoix').value = choriste.voix || '';
+    document.getElementById('editCommunaute').value = choriste.communaute || '';
+    document.getElementById('editTelephone').value = choriste.telephone || '';
+    
+    currentEditPhotoUrl = choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar';
+    document.getElementById('editPhotoPreview').src = currentEditPhotoUrl;
+    
+    document.getElementById('editModal').classList.add('show');
+}
+
+function hideEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+async function enregistrerModification() {
+    const id = document.getElementById('editChoristeId').value;
+    const nomComplet = document.getElementById('editNomComplet').value;
+    const sexe = document.getElementById('editSexe').value;
+    const voix = document.getElementById('editVoix').value;
+    const communaute = document.getElementById('editCommunaute').value;
+    const telephone = document.getElementById('editTelephone').value;
+    
+    if (!id || !nomComplet || !sexe || !voix || !communaute || !telephone) {
+        return;
+    }
+    
+    try {
+        await db.collection('choristes').doc(id).update({
+            nomComplet: nomComplet,
+            sexe: sexe,
+            voix: voix,
+            communaute: communaute,
+            telephone: telephone,
+            photo: currentEditPhotoUrl
+        });
+        
+        hideEditModal();
+        await chargerDonnees();
+        
+        if (document.getElementById('liste').classList.contains('active')) {
+            loadListeChoristes();
+        }
+        
+    } catch (error) {
+        console.error("Erreur modification:", error);
+    }
 }
 
 function imprimerListe() {
@@ -1333,6 +1538,7 @@ function imprimerListe() {
                         <th>Photo</th>
                         <th>Nom complet</th>
                         <th>Voix</th>
+                        <th>Communauté</th>
                         <th>%</th>
                     </tr>
                 </thead>
@@ -1357,6 +1563,7 @@ function imprimerListe() {
                 <td><img src="${choriste.photo || 'https://res.cloudinary.com/diwn8sxtn/image/upload/v1/default-avatar'}" alt="Photo"></td>
                 <td>${choriste.nomComplet || ''}</td>
                 <td><span class="badge-voix badge-${(choriste.voix || '').toLowerCase()}">${choriste.voix || ''}</span></td>
+                <td>${choriste.communaute || ''}</td>
                 <td><span class="${couleurPourcentage}">${pourcentage}%</span></td>
             </tr>
         `;
